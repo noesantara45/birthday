@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selamat Ulang Tahun ke-19!</title>
+    <!-- Confetti Library CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <style>
+        /* Reset CSS */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Body and Background Animation */
+        body {
+            font-family: 'Arial', sans-serif;
+            /* Gradient warna dominan hitam dan pink */
+            background: linear-gradient(45deg, #000000, #330033, #FF007F, #FF69B4); /* Black, Dark Purple-Pink, Fuchsia, Hot Pink */
+            background-size: 400% 400%;
+            animation: gradientShift 6s ease infinite;
+            overflow-x: hidden; /* Mencegah scroll horizontal */
+            cursor: pointer; /* Menunjukkan bahwa halaman interaktif */
+        }
+
+        /* Keyframes for background gradient animation */
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Intro Candle Screen Styles (NEW) */
+        .intro-candle-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000000; /* Black background */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001; /* Higher than splash-screen initially */
+            opacity: 1;
+            transition: opacity 1s ease;
+            text-align: center;
+            color: white;
+            padding: 20px;
+        }
+        .intro-candle-screen.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .intro-candle-title {
+            font-size: 3rem;
+            color: #FFC0CB; /* Light Pink */
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.7);
+            margin-bottom: 40px;
+            animation: bounceIn 1s ease-out;
+        }
+        .intro-candles-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .intro-candle {
+            width: 20px;
+            height: 80px;
+            background-color: #FFFFFF;
+            border-radius: 5px;
+            position: relative;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        .intro-flame {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 10px;
+            height: 20px;
+            background: radial-gradient(circle, #ffd700, #ff4500);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            opacity: 0; /* Initially off */
+            transition: opacity 0.5s ease;
+        }
+        .intro-flame.lit {
+            opacity: 1;
+            animation: flicker 0.5s ease-in-out infinite alternate;
+        }
+        .intro-click-hint {
+            font-size: 1.2rem;
+            color: #FFC0CB;
+            animation: pulse 2s infinite;
+            margin-top: 20px;
+        }
+
+
+        /* Splash Screen Styles */
+        .splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000; /* Pastikan di atas konten lain */
+            background: linear-gradient(45deg, #000000, #330033, #FF007F, #FF69B4); /* Samakan dengan body untuk transisi mulus */
+            background-size: 400% 400%;
+            animation: gradientShift 6s ease infinite; /* Animasi background splash screen */
+            opacity: 0; /* Hidden initially */
+            pointer-events: none; /* No interaction initially */
+            transition: opacity 1s ease, transform 1s ease; /* Transisi saat fade out */
+        }
+
+        .splash-screen.active { /* Class to make it visible */
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .splash-screen.fade-out {
+            opacity: 0;
+            transform: scale(1.1); /* Sedikit membesar saat fade out */
+            pointer-events: none; /* Nonaktifkan interaksi setelah fade out */
+        }
+
+        .splash-title {
+            font-size: 3.5rem;
+            color: #FFC0CB; /* Light Pink */
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+            text-align: center;
+            margin-bottom: 20px;
+            animation: bounceIn 1s ease-out; /* Animasi masuk */
+        }
+
+        .splash-subtitle {
+            font-size: 2rem;
+            color: #FFC0CB; /* Light Pink */
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            animation: bounceIn 1s ease-out 0.5s both; /* Animasi masuk dengan delay */
+        }
+
+        .click-hint {
+            position: absolute;
+            bottom: 50px; /* Kembali ke posisi asli */
+            color: #FFC0CB; /* Light Pink */
+            font-size: 1.2rem;
+            animation: pulse 2s infinite; /* Animasi berdenyut */
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+        }
+
+        /* Keyframes for splash screen elements */
+        @keyframes bounceIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.3) translateY(-50px);
+            }
+            50% {
+                transform: scale(1.05) translateY(0);
+            }
+            70% {
+                transform: scale(0.9);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Cake Container */
+        .cake-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column; /* Changed to column to stack elements */
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        .cake-container.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Cake Structure */
+        .cake {
+            position: relative;
+            transform: translateY(50px); /* Posisi awal sebelum muncul */
+            opacity: 0; /* Sembunyikan awal */
+        }
+
+        .cake.show {
+            animation: cakeAppear 1s ease-out forwards; /* Animasi muncul kue */
+        }
+
+        @keyframes cakeAppear {
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .cake-layer {
+            width: 200px;
+            height: 60px;
+            border-radius: 10px;
+            position: relative;
+            margin: 0 auto;
+            opacity: 0; /* Sembunyikan awal untuk animasi jatuh */
+            transform: translateY(-100vh); /* Mulai dari atas layar */
+            border: 3px solid #4B3621; /* Dark Brown border */
+            box-shadow: 0 5px 10px rgba(0,0,0,0.3); /* Shadow for depth */
+        }
+
+        .cake-layer.falling {
+            animation: fallDownSlow 2s ease-out forwards; /* Animasi jatuh lambat */
+        }
+
+        /* Cake Layers - Brown Colors */
+        .layer1 {
+            background: linear-gradient(45deg, #8B4513, #A0522D, #CD853F); /* SaddleBrown, Sienna, Peru */
+            background-size: 200% 200%;
+            animation: cakeShine 3s ease-in-out infinite; /* Animasi kilau */
+            width: 250px;
+            height: 70px;
+            border-radius: 15px;
+        }
+
+        .layer2 {
+            background: linear-gradient(45deg, #654321, #8B4513, #A0522D); /* Dark Brown, SaddleBrown, Sienna */
+            background-size: 200% 200%;
+            animation: cakeShine 3s ease-in-out infinite 0.5s;
+            width: 200px;
+            height: 60px;
+            margin-top: -15px;
+            border-radius: 12px;
+        }
+
+        .layer3 {
+            background: linear-gradient(45deg, #A0522D, #D2691E, #CD853F); /* Sienna, Chocolate, Peru */
+            background-size: 200% 200%;
+            animation: cakeShine 3s ease-in-out infinite 1s;
+            width: 150px;
+            height: 50px;
+            margin-top: -15px;
+            border-radius: 10px;
+        }
+
+        @keyframes cakeShine {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes fallDownSlow {
+            0% {
+                opacity: 1;
+                transform: translateY(-100vh) rotate(-10deg);
+            }
+            30% {
+                transform: translateY(-50vh) rotate(-5deg);
+            }
+            70% {
+                transform: translateY(15px) rotate(3deg);
+            }
+            85% {
+                transform: translateY(-5px) rotate(-1deg);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) rotate(0deg);
+            }
+        }
+
+        /* Frosting (Icing) Styles - White/Light Pink */
+        .frosting {
+            position: absolute;
+            top: -20px;
+            left: -5px;
+            width: calc(100% + 10px);
+            height: 30px;
+            background: linear-gradient(45deg, #FFFFFF, #F0F0F0, #FFC0CB); /* White, Light Gray, Light Pink */
+            border-radius: 50px;
+            box-shadow: inset 0 4px 8px rgba(0,0,0,0.1);
+            border: 2px solid #FF69B4; /* Hot Pink border */
+            z-index: 1;
+            /* Simple decoration dots */
+            background-image: radial-gradient(circle at 10% 20%, #FF69B4 3px, transparent 3px),
+                              radial-gradient(circle at 30% 15%, #FF007F 3px, transparent 3px),
+                              radial-gradient(circle at 50% 25%, #FFC0CB 3px, transparent 3px),
+                              radial-gradient(circle at 70% 18%, #FF69B4 3px, transparent 3px),
+                              radial-gradient(circle at 90% 22%, #FF007F 3px, transparent 3px);
+            background-size: 100% 100%; /* Ensure dots cover the area */
+        }
+
+        /* Candle Holder and Candles */
+        .candle-holder {
+            position: absolute;
+            top: -80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100vh);
+            opacity: 0;
+            z-index: 4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .candle-holder.falling {
+            animation: numberFall 2s ease-out forwards;
+        }
+
+        @keyframes numberFall {
+            0% {
+                opacity: 1;
+                transform: translateX(-50%) translateY(-100vh) rotate(-15deg);
+            }
+            30% {
+                transform: translateX(-50%) translateY(-50vh) rotate(-8deg);
+            }
+            70% {
+                transform: translateX(-50%) translateY(10px) rotate(5deg);
+            }
+            85% {
+                transform: translateX(-50%) translateY(-3px) rotate(-2deg);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0) rotate(0deg);
+            }
+        }
+
+        .candle {
+            width: 8px;
+            height: 40px;
+            background: linear-gradient(45deg, #FFFFFF, #F0F0F0); /* White/Light Gray */
+            border-radius: 4px;
+            position: relative;
+            display: inline-block;
+            margin: 0 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            cursor: pointer; /* Menandakan bisa diklik */
+        }
+
+        .number-candle {
+            font-size: 48px;
+            font-weight: bold;
+            color: #FF007F; /* Fuchsia */
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin: 0 10px;
+            position: relative;
+        }
+
+        .flame {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 12px;
+            background: radial-gradient(circle, #ffd700, #ff4500); /* Kuning ke oranye-merah (tetap untuk api) */
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; /* Bentuk api */
+            animation: flicker 0.5s ease-in-out infinite alternate; /* Animasi api berkedip */
+            transition: opacity 0.3s ease-out; /* Untuk efek mati */
+        }
+
+        .flame.extinguished {
+            opacity: 0;
+        }
+
+        /* Sparkles Effect */
+        .sparkles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .sparkle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #FFC0CB; /* Light Pink for sparkles */
+            border-radius: 50%;
+            animation: sparkleFloat 3s infinite;
+        }
+
+        @keyframes sparkleFloat {
+            0%, 100% {
+                opacity: 0;
+                transform: translateY(0) scale(0);
+            }
+            50% {
+                opacity: 1;
+                transform: translateY(-50px) scale(1);
+            }
+        }
+
+        /* Blow Candle Screen */
+        .blow-candle-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 999; /* Di bawah splash screen, di atas cake container saat aktif */
+            background: linear-gradient(45deg, #000000, #330033, #FF007F, #FF69B4); /* Samakan dengan body */
+            background-size: 400% 400%;
+            animation: gradientShift 6s ease infinite;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1s ease;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .blow-candle-screen.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .large-candle-display {
+            position: relative;
+            width: 100px; /* Base size for large candle */
+            height: 200px;
+            background: linear-gradient(to right, #FFFFFF, #F0F0F0, #FFFFFF);
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 10px;
+            border: 3px solid #FF69B4; /* Hot Pink border */
+            cursor: pointer; /* Menandakan bisa diklik */
+        }
+
+        .large-candle-body {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to right, #FFFFFF, #F0F0F0, #FFFFFF);
+            border-radius: 10px;
+            z-index: 1;
+        }
+
+        .large-flame {
+            position: absolute;
+            top: -20px; /* Di atas lilin */
+            width: 20px;
+            height: 40px;
+            background: radial-gradient(circle, #ffd700, #ff4500);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            animation: flicker 0.5s ease-in-out infinite alternate;
+            transition: opacity 0.3s ease-out;
+            z-index: 2;
+        }
+
+        .large-flame.extinguished {
+            opacity: 0;
+        }
+
+        .blow-hint {
+            font-size: 1.8rem;
+            color: #FFC0CB;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            animation: pulse 2s infinite;
+        }
+
+
+        /* Final Message Screen */
+        .final-message-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            background: linear-gradient(45deg, #000000, #330033, #FF007F, #FF69B4); /* Samakan dengan body */
+            background-size: 400% 400%;
+            animation: gradientShift 6s ease infinite;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1s ease;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .final-message-screen.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .final-message-screen h2 {
+            font-size: 3.5rem;
+            color: #FFC0CB;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+            margin-bottom: 30px;
+            animation: bounceIn 1s ease-out; /* Re-use bounceIn for title */
+        }
+
+        .final-message-screen p {
+            font-size: 1.8rem;
+            color: #FFC0CB;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            min-height: 1.8em; /* Untuk mencegah layout shift saat teks muncul */
+        }
+
+        /* Responsive Adjustments for Mobile */
+        @media (max-width: 768px) {
+            .intro-candle-title {
+                font-size: 2rem;
+            }
+            .intro-candles-container {
+                gap: 10px;
+            }
+            .intro-candle {
+                width: 15px;
+                height: 60px;
+            }
+            .intro-flame {
+                width: 8px;
+                height: 16px;
+            }
+            .intro-click-hint {
+                font-size: 1rem;
+            }
+
+            .splash-title, .final-message-screen h2 {
+                font-size: 2.5rem;
+            }
+            .splash-subtitle {
+                font-size: 1.5rem;
+            }
+            .cake-layer {
+                width: 150px;
+                height: 45px;
+            }
+            .layer1 { width: 180px; }
+            .layer2 { width: 150px; }
+            .layer3 { width: 120px; }
+            .number-candle {
+                font-size: 36px;
+            }
+            .final-message-screen p {
+                font-size: 1.2rem;
+            }
+            .click-hint {
+                font-size: 1rem;
+                bottom: 30px;
+            }
+            .blow-hint {
+                font-size: 1.2rem;
+            }
+            .large-candle-display {
+                width: 80px; /* Adjusted for mobile */
+                height: 160px; /* Adjusted for mobile */
+            }
+            .large-flame {
+                width: 15px;
+                height: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Intro Candle Screen (NEW) -->
+    <div class="intro-candle-screen" id="introCandleScreen">
+        <div class="intro-candle-title">Selamat Ulang Tahun!</div>
+        <div class="intro-candles-container">
+            <div class="intro-candle"><div class="intro-flame"></div></div>
+            <div class="intro-candle"><div class="intro-flame"></div></div>
+            <div class="intro-candle"><div class="intro-flame"></div></div>
+            <div class="intro-candle"><div class="intro-flame"></div></div>
+            <div class="intro-candle"><div class="intro-flame"></div></div>
+        </div>
+        <div class="intro-click-hint">nyalain lilin nya mbaaakk</div>
+    </div>
+
+    <!-- Splash Screen -->
+    <div class="splash-screen" id="splashScreen">
+        <h1 class="splash-title">Selamat Ulang Tahun!</h1>
+        <p class="splash-subtitle">Yang ke-19</p>
+        <div class="click-hint">pencet mbaaakk ✨</div>
+    </div>
+
+    <div class="cake-container" id="cakeContainer">
+        <div class="sparkles" id="sparkles"></div>
+        
+        <div class="cake" id="cake">
+            <div class="cake-layer layer3">
+                <div class="frosting"></div>
+            </div>
+            <div class="cake-layer layer2">
+                <div class="frosting"></div>
+            </div>
+            <div class="cake-layer layer1">
+                <div class="frosting"></div>
+            </div>
+            <div class="candle-holder">
+                <div class="candle" data-candle-id="1">
+                    <div class="flame"></div>
+                </div>
+                <span class="number-candle">1</span>
+                <span class="number-candle">9</span>
+                <div class="candle" data-candle-id="2">
+                    <div class="flame"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Blow Candle Screen (Intermediate Screen) -->
+    <div class="blow-candle-screen" id="blowCandleScreen">
+        <div class="large-candle-display">
+            <div class="large-flame" id="largeFlame"></div>
+            <div class="large-candle-body"></div>
+        </div>
+        <div class="blow-hint">tiup mbaaakk, hehe pencet maksud nya ✨</div>
+    </div>
+
+    <!-- Final Message Screen -->
+    <div class="final-message-screen" id="finalMessageScreen">
+        <h2>Selamat Ulang Tahun, Uthary Tsabitah! 🎉</h2>
+        <p id="hopesAndWishes"></p>
+    </div>
+
+    <script>
+        let currentScreen = 'intro'; // Initial state: 'intro', 'splash', 'cake', 'blow', 'final'
+
+        const introCandleScreen = document.getElementById('introCandleScreen');
+        const introFlames = document.querySelectorAll('.intro-flame');
+        const splashScreen = document.getElementById('splashScreen');
+        const cakeContainer = document.getElementById('cakeContainer');
+        const blowCandleScreen = document.getElementById('blowCandleScreen');
+        const finalMessageScreen = document.getElementById('finalMessageScreen');
+
+        // Deklarasi variabel di scope yang lebih luas
+        const cake = document.getElementById('cake');
+        const layers = document.querySelectorAll('.cake-layer');
+        const candleHolder = document.querySelector('.candle-holder');
+        const largeFlame = document.getElementById('largeFlame'); // Dapatkan elemen api lilin besar
+
+
+        // Fungsi untuk membuat efek kilauan
+        function createSparkles() {
+            const sparklesContainer = document.getElementById('sparkles');
+            for (let i = 0; i < 20; i++) {
+                setTimeout(() => {
+                    const sparkle = document.createElement('div');
+                    sparkle.className = 'sparkle';
+                    sparkle.style.left = Math.random() * 100 + '%';
+                    sparkle.style.top = Math.random() * 100 + '%'; /* Posisi Y acak */
+                    sparkle.style.animationDelay = Math.random() * 2 + 's';
+                    sparklesContainer.appendChild(sparkle);
+                    
+                    setTimeout(() => {
+                        if (sparkle.parentNode) {
+                            sparkle.parentNode.removeChild(sparkle);
+                        }
+                    }, 3000);
+                }, i * 200);
+            }
+        }
+
+        // Fungsi untuk menampilkan harapan per kata
+        function typeHopesAndWishes() {
+            const wishesText = "Tahun ini semoga lebih banyak senyumnya daripada stresnya. Yang lagi ruwet semoga lekas reda, yang ditunggu-tunggu semoga lekas datang. Sekarang udah resmi jadi maba—selamat datang di dunia baru yang seru. Semangat kuliahnya, kamu pasti bisa ngadepin semuanya, pelan-pelan tapi pasti. Dan semoga semua yang kamu semogakan, satu per satu jadi kenyataan. 🌻 Doa dari aku, semoga Mbak Uthary selalu diberi kesehatan, lahir dan batin. Aku selalu dukung dari jauh, tapi nggak pernah jauh beneran.";
+            const words = wishesText.split(' ');
+            const hopesAndWishesEl = document.getElementById('hopesAndWishes');
+            hopesAndWishesEl.textContent = ''; // Clear previous text
+            let wordIndex = 0;
+
+            const interval = setInterval(() => {
+                if (wordIndex < words.length) {
+                    hopesAndWishesEl.textContent += words[wordIndex] + ' ';
+                    wordIndex++;
+                } else {
+                    clearInterval(interval);
+                }
+            }, 100); // Delay 100ms per kata
+        }
+
+        // --- Main Click Handler for Screen Transitions ---
+        document.body.addEventListener('click', function() {
+            console.log("Body clicked. Current screen:", currentScreen); // Debugging log
+
+            if (currentScreen === 'intro') {
+                currentScreen = 'animating_intro'; // Prevent re-triggering
+
+                // Light up intro candles one by one
+                introFlames.forEach((flame, index) => {
+                    setTimeout(() => {
+                        flame.classList.add('lit');
+                    }, index * 500); // Light up every 0.5 seconds
+                });
+
+                // After all intro candles are lit, transition to splash screen
+                setTimeout(() => {
+                    introCandleScreen.classList.add('fade-out');
+                    setTimeout(() => {
+                        introCandleScreen.style.display = 'none'; // Fully hide intro screen
+                        splashScreen.classList.add('active'); // Show splash screen
+                        currentScreen = 'splash'; // Update state
+                        console.log("Transitioned to Splash Screen."); // Debugging log
+                    }, 1000); // Wait for intro fade-out transition
+                }, introFlames.length * 500 + 1000); // Wait for all candles to light + a bit more
+
+            } else if (currentScreen === 'splash') {
+                currentScreen = 'animating_cake'; // Prevent re-triggering
+
+                splashScreen.classList.add('fade-out');
+                
+                setTimeout(() => {
+                    splashScreen.style.display = 'none'; // Fully hide splash screen
+                    cakeContainer.classList.add('active'); // Show cake container
+                    cake.classList.add('show'); // Start cake animation
+                    
+                    // Animasi jatuhnya lapisan kue secara berurutan
+                    setTimeout(() => { layers[2].classList.add('falling'); }, 500);
+                    setTimeout(() => { layers[1].classList.add('falling'); }, 2000);
+                    setTimeout(() => { layers[0].classList.add('falling'); }, 3500);
+                    
+                    // Lilin turun
+                    setTimeout(() => {
+                        candleHolder.classList.add('falling');
+                    }, 5000);
+                    
+                    // Mulai efek kilauan
+                    setTimeout(() => {
+                        createSparkles();
+                        setInterval(createSparkles, 5000);
+                    }, 6500);
+
+                    // Setelah animasi kue selesai, transisi ke blow candle screen
+                    setTimeout(() => {
+                        cakeContainer.style.opacity = '0'; // Sembunyikan cake container
+                        cakeContainer.style.pointerEvents = 'none';
+                        
+                        setTimeout(() => {
+                            blowCandleScreen.classList.add('active'); // Tampilkan blow candle screen
+                            currentScreen = 'blow'; // Update state
+                            console.log("Transitioned to Blow Candle Screen."); // Debugging log
+                        }, 500); // Jeda sebentar sebelum menampilkan blow candle screen
+                    }, 8000); // Sesuaikan timing ini agar muncul setelah semua animasi kue selesai
+                    
+                }, 1000); // Jeda sebelum memulai animasi setelah splash fade
+
+            }
+            // Clicks on blow-candle-screen and final-message-screen have their own specific listeners below
+            // No action if currentScreen is 'animating_intro', 'animating_cake', or 'final'
+        });
+
+        // Event listener untuk mematikan api lilin kecil (opsional, hanya visual)
+        document.querySelectorAll('.candle').forEach(candle => {
+            candle.addEventListener('click', function(event) {
+                event.stopPropagation(); // Prevent body click from firing
+                const flame = this.querySelector('.flame');
+                if (flame && !flame.classList.contains('extinguished')) {
+                    flame.classList.add('extinguished');
+                }
+            });
+        });
+
+        // Event listener untuk mematikan api lilin besar di blow-candle-screen (dan memicu konfeti)
+        document.getElementById('blowCandleScreen').addEventListener('click', function(event) {
+            event.stopPropagation(); // Prevent body click from firing
+            if (currentScreen === 'blow' && !largeFlame.classList.contains('extinguished')) {
+                console.log("Clicked on Blow Candle Screen. Extinguishing flame and triggering confetti."); // Debugging log
+                largeFlame.classList.add('extinguished');
+                
+                // Trigger confetti!
+                if (typeof confetti !== 'undefined') { // Check if confetti library is loaded
+                    confetti({
+                        particleCount: 150, // More particles
+                        spread: 100, // Wider spread
+                        origin: { y: 0.6 }, // From the middle of the screen
+                        colors: ['#FF007F', '#FFC0CB', '#FFFFFF', '#000000', '#FF69B4'] // Pink, Light Pink, White, Black, Hot Pink
+                    });
+                } else {
+                    console.warn("Confetti library not loaded.");
+                }
+
+                // Transisi ke final message screen
+                const blowCandleScreen = document.getElementById('blowCandleScreen');
+                const finalMessageScreen = document.getElementById('finalMessageScreen');
+
+                blowCandleScreen.style.opacity = '0';
+                blowCandleScreen.style.pointerEvents = 'none';
+
+                setTimeout(() => {
+                    finalMessageScreen.classList.add('active');
+                    typeHopesAndWishes(); // Mulai animasi teks harapan
+                    currentScreen = 'final'; // Update state
+                    console.log("Transitioned to Final Message Screen."); // Debugging log
+                }, 500); // Tunggu sebentar sebelum transisi
+            }
+        });
+
+
+        // Mencegah menu konteks klik kanan
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        // Menambahkan efek kilauan interaktif saat mouse bergerak (tetap aktif setelah animasi dimulai)
+        document.addEventListener('mousemove', function(e) {
+            if (currentScreen !== 'intro') { // Hanya aktif setelah intro screen
+                const sparkle = document.createElement('div');
+                sparkle.className = 'sparkle';
+                sparkle.style.position = 'fixed';
+                sparkle.style.left = e.clientX + 'px';
+                sparkle.style.top = e.clientY + 'px';
+                sparkle.style.pointerEvents = 'none';
+                sparkle.style.zIndex = '999';
+                document.body.appendChild(sparkle);
+                
+                setTimeout(() => {
+                    if (sparkle.parentNode) {
+                        sparkle.parentNode.removeChild(sparkle);
+                    }
+                }, 1000);
+            }
+        });
+
+        // Initial setup on DOMContentLoaded to ensure correct screen visibility
+        document.addEventListener('DOMContentLoaded', () => {
+            // Ensure only intro screen is visible initially
+            splashScreen.classList.remove('active');
+            cakeContainer.classList.remove('active');
+            blowCandleScreen.classList.remove('active');
+            finalMessageScreen.classList.remove('active');
+            introCandleScreen.classList.add('active'); // Ensure intro screen is active
+            console.log("DOM Loaded. Initial screen: Intro."); // Debugging log
+        });
+    </script>
+</body>
+</html>
